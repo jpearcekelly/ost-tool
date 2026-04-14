@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/*
+ * OST Tool Design Tokens
+ * Source of truth: Paper "OST" file + DESIGN_TOKENS.md
+ * All components use these tokens via Tailwind theme — never raw values.
+ */
+
+/* ─── Light Mode (default) ─── */
+:root {
+  /* Node type colors */
+  --color-metric: #7C3AED;
+  --color-opportunity: #059669;
+  --color-solution: #2563EB;
+  --color-assumption: #D97706;
+  --color-experiment: #DB2777;
+
+  /* Status colors */
+  --color-status-active: #059669;
+  --color-status-validated: #059669;
+  --color-status-invalidated: #DC2626;
+  --color-status-stale: #EA580C;
+  --color-status-paused: #A8A29E;
+
+  /* Surface colors */
+  --color-bg-canvas: #FAFAF8;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-hover: #F5F5F4;
+  --color-bg-panel: #FAFAF8;
+  --color-bg-input: #F5F5F4;
+  --color-bg-border: #E7E5E4;
+
+  /* Text colors */
+  --color-text-primary: #1A1916;
+  --color-text-body: #44403C;
+  --color-text-secondary: #78716C;
+  --color-text-muted: #A8A29E;
+  --color-text-link: #2563EB;
+
+  /* Edge colors */
+  --color-edge-default: #D6D3D1;
+  --color-edge-highlighted: #78716C;
+  --color-edge-cross-link: rgba(120, 113, 108, 0.5);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-panel: -4px 0 16px rgba(0, 0, 0, 0.08);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Dark Mode ─── */
+.dark {
+  --color-metric: #A78BFA;
+  --color-opportunity: #34D399;
+  --color-solution: #60A5FA;
+  --color-assumption: #FBBF24;
+  --color-experiment: #F472B6;
+
+  --color-status-active: #34D399;
+  --color-status-validated: #34D399;
+  --color-status-invalidated: #F87171;
+  --color-status-stale: #FB923C;
+  --color-status-paused: #94A3B8;
+
+  --color-bg-canvas: #0F172A;
+  --color-bg-card: #1E293B;
+  --color-bg-card-hover: #334155;
+  --color-bg-panel: #1E293B;
+  --color-bg-input: #0F172A;
+  --color-bg-border: #334155;
+
+  --color-text-primary: #F1F5F9;
+  --color-text-body: #CBD5E1;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-link: #60A5FA;
+
+  --color-edge-default: #475569;
+  --color-edge-highlighted: #94A3B8;
+  --color-edge-cross-link: rgba(100, 116, 139, 0.5);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-panel: -4px 0 16px rgba(0, 0, 0, 0.3);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── Spacing tokens (mode-independent) ─── */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Node-specific spacing */
+  --node-padding: 12px;
+  --node-gap: 16px;
+  --node-row-gap: 48px;
+  --node-min-width: 180px;
+  --node-max-width: 260px;
+  --node-thumbnail-height: 120px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Border widths */
+  --border-width: 1px;
+  --border-width-node: 2px;
+  --border-width-node-selected: 3px;
+
+  /* Typography */
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+
+  /* Animation */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-layout: 300ms;
+  --duration-slow: 500ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-layout: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index */
+  --z-canvas: 0;
+  --z-node: 1;
+  --z-node-selected: 10;
+  --z-breadcrumb: 20;
+  --z-panel: 30;
+  --z-dropdown: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+}
+
+/* ─── Tailwind v4 theme extension ─── */
+@theme {
+  /* Node type colors */
+  --color-metric: var(--color-metric);
+  --color-opportunity: var(--color-opportunity);
+  --color-solution: var(--color-solution);
+  --color-assumption: var(--color-assumption);
+  --color-experiment: var(--color-experiment);
+
+  /* Surfaces */
+  --color-canvas: var(--color-bg-canvas);
+  --color-card: var(--color-bg-card);
+  --color-card-hover: var(--color-bg-card-hover);
+  --color-panel: var(--color-bg-panel);
+  --color-input: var(--color-bg-input);
+  --color-border: var(--color-bg-border);
+
+  /* Text */
+  --color-text-primary: var(--color-text-primary);
+  --color-text-body: var(--color-text-body);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-link: var(--color-text-link);
+
+  /* Radii */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  /* Font */
+  --font-family-sans: "Inter", system-ui, sans-serif;
+}
+
+/* ─── Base styles ─── */
+body {
+  font-family: var(--font-family-sans);
+  background: var(--color-bg-canvas);
+  color: var(--color-text-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

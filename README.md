@@ -1,5 +1,7 @@
 # OST Tool
 
+> **This is a private project. All rights reserved. Not open source, not public domain.**
+
 **An AI-powered product discovery tool that connects business metrics to user opportunities to solutions — in one navigable tree.**
 
 ## The Problem
