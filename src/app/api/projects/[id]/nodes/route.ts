@@ -182,5 +182,5 @@ async function handleCreateNode(projectId: string, body: Record<string, unknown>
     },
   });
 
-  return NextResponse.json(JSON.parse(JSON.stringify(created)), { status: 201 });
+  return NextResponse.json(created, { status: 201 });
 }

@@ -1,27 +1,36 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import {
+  pgTable,
+  text,
+  integer,
+  doublePrecision,
+  boolean,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 /*
- * OST Tool — Drizzle Schema
+ * OST Tool — Drizzle Schema (Postgres)
  * Source of truth for the data model. Keep DATA_MODEL.md in sync but this file wins.
  *
  * Conventions:
- * - UUIDs stored as text (SQLite has no native UUID type)
- * - Timestamps stored as integer (Unix epoch ms) via { mode: "timestamp_ms" }
+ * - UUIDs stored as text (generated client-side with crypto.randomUUID())
+ * - Timestamps use Postgres native `timestamp` type
+ * - Booleans use Postgres native `boolean` type
+ * - JSON uses Postgres `jsonb` for indexable structured data
  * - Enums enforced at the application layer via Zod, not DB constraints
- * - All IDs are generated client-side with crypto.randomUUID()
  */
 
 // ─── Project ───
 
-export const projects = sqliteTable("projects", {
+export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  createdAt: timestamp("created_at", { mode: "date" })
     .notNull()
     .$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+  updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .$defaultFn(() => new Date()),
 });
@@ -71,7 +80,7 @@ export type ExperimentStatus =
   | "completed"
   | "abandoned";
 
-export const nodes = sqliteTable("nodes", {
+export const nodes = pgTable("nodes", {
   id: text("id").primaryKey(),
   projectId: text("project_id")
     .notNull()
@@ -82,10 +91,10 @@ export const nodes = sqliteTable("nodes", {
   description: text("description"),
   status: text("status").notNull(), // Type-specific — validated by Zod
   sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
+  createdAt: timestamp("created_at", { mode: "date" })
     .notNull()
     .$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+  updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
     .$defaultFn(() => new Date()),
 });
@@ -140,19 +149,19 @@ export type JourneyStage =
 export type RefreshFrequency = "manual" | "daily" | "weekly";
 export type SourceType = "manual" | "snowflake" | "api";
 
-export const metricDetails = sqliteTable("metric_details", {
+export const metricDetails = pgTable("metric_details", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
     .unique()
     .references(() => nodes.id, { onDelete: "cascade" }),
   metricType: text("metric_type").notNull(), // MetricType
-  currentValue: real("current_value"),
-  targetValue: real("target_value"),
+  currentValue: doublePrecision("current_value"),
+  targetValue: doublePrecision("target_value"),
   unit: text("unit"), // e.g., "%", "$", "count"
   sourceType: text("source_type").notNull().default("manual"), // SourceType
-  sourceConfig: text("source_config", { mode: "json" }), // connection details
-  lastRefreshedAt: integer("last_refreshed_at", { mode: "timestamp_ms" }),
+  sourceConfig: jsonb("source_config"), // connection details
+  lastRefreshedAt: timestamp("last_refreshed_at", { mode: "date" }),
   refreshFrequency: text("refresh_frequency").notNull().default("manual"), // RefreshFrequency
   journeyStage: text("journey_stage"), // JourneyStage — determines horizontal ordering
 });
@@ -173,7 +182,7 @@ export type OpportunitySource =
   | "feedback"
   | "assumption";
 
-export const opportunityDetails = sqliteTable("opportunity_details", {
+export const opportunityDetails = pgTable("opportunity_details", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
@@ -183,8 +192,8 @@ export const opportunityDetails = sqliteTable("opportunity_details", {
   reach: integer("reach"),
   impact: integer("impact"), // 1-5
   confidence: integer("confidence"), // 10-100
-  effort: real("effort"), // person-weeks
-  riceScore: real("rice_score"), // computed: (reach * impact * confidence%) / effort
+  effort: doublePrecision("effort"), // person-weeks
+  riceScore: doublePrecision("rice_score"), // computed: (reach * impact * confidence%) / effort
 });
 
 export const opportunityDetailsRelations = relations(
@@ -199,7 +208,7 @@ export const opportunityDetailsRelations = relations(
 
 // ─── SolutionDetail ───
 
-export const solutionDetails = sqliteTable("solution_details", {
+export const solutionDetails = pgTable("solution_details", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
@@ -208,8 +217,8 @@ export const solutionDetails = sqliteTable("solution_details", {
   reach: integer("reach"),
   impact: integer("impact"), // 1-5
   confidence: integer("confidence"), // 10-100
-  effort: real("effort"),
-  riceScore: real("rice_score"),
+  effort: doublePrecision("effort"),
+  riceScore: doublePrecision("rice_score"),
 });
 
 export const solutionDetailsRelations = relations(
@@ -231,16 +240,14 @@ export type AssumptionCategory =
   | "viability";
 export type EvidenceStrength = "none" | "weak" | "moderate" | "strong";
 
-export const assumptionDetails = sqliteTable("assumption_details", {
+export const assumptionDetails = pgTable("assumption_details", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
     .unique()
     .references(() => nodes.id, { onDelete: "cascade" }),
   category: text("category"), // AssumptionCategory
-  isLeapOfFaith: integer("is_leap_of_faith", { mode: "boolean" })
-    .notNull()
-    .default(false),
+  isLeapOfFaith: boolean("is_leap_of_faith").notNull().default(false),
   evidenceStrength: text("evidence_strength").notNull().default("none"), // EvidenceStrength
 });
 
@@ -270,7 +277,7 @@ export type ExperimentOutcome =
   | "invalidated"
   | "inconclusive";
 
-export const experimentDetails = sqliteTable("experiment_details", {
+export const experimentDetails = pgTable("experiment_details", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
@@ -282,8 +289,8 @@ export const experimentDetails = sqliteTable("experiment_details", {
   successCriteria: text("success_criteria"),
   result: text("result"),
   outcome: text("outcome").notNull().default("pending"), // ExperimentOutcome
-  startedAt: integer("started_at", { mode: "timestamp_ms" }),
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  startedAt: timestamp("started_at", { mode: "date" }),
+  completedAt: timestamp("completed_at", { mode: "date" }),
 });
 
 export const experimentDetailsRelations = relations(
@@ -299,15 +306,15 @@ export const experimentDetailsRelations = relations(
 // ─── TreeLayout ───
 // Visual position of each node on the React Flow canvas. Decoupled from domain data.
 
-export const treeLayouts = sqliteTable("tree_layouts", {
+export const treeLayouts = pgTable("tree_layouts", {
   id: text("id").primaryKey(),
   nodeId: text("node_id")
     .notNull()
     .unique()
     .references(() => nodes.id, { onDelete: "cascade" }),
-  positionX: real("position_x").notNull().default(0),
-  positionY: real("position_y").notNull().default(0),
-  collapsed: integer("collapsed", { mode: "boolean" }).notNull().default(false),
+  positionX: doublePrecision("position_x").notNull().default(0),
+  positionY: doublePrecision("position_y").notNull().default(0),
+  collapsed: boolean("collapsed").notNull().default(false),
 });
 
 export const treeLayoutsRelations = relations(treeLayouts, ({ one }) => ({

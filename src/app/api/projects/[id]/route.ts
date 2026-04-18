@@ -38,9 +38,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const result = await db.delete(projects).where(eq(projects.id, id));
+  const result = await db
+    .delete(projects)
+    .where(eq(projects.id, id))
+    .returning({ id: projects.id });
 
-  if (result.changes === 0) {
+  if (result.length === 0) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 

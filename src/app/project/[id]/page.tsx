@@ -3,6 +3,9 @@ import { db } from "@/db";
 import { dbNodesToFlowElements } from "@/lib/tree-data";
 import { TreeCanvas } from "@/components/tree/tree-canvas";
 import { NodeDetailPanel } from "@/components/tree/panels/node-detail-panel";
+import { AddRootNodeButton } from "@/components/tree/add-root-node-button";
+
+export const dynamic = "force-dynamic";
 
 export default async function ProjectPage({
   params,
@@ -73,26 +76,8 @@ function ProjectHeader({ name, projectId }: { name: string; projectId: string })
           {name}
         </h1>
       </div>
-      <AddNodeButton projectId={projectId} />
+      <AddRootNodeButton />
     </div>
   );
 }
 
-function AddNodeButton({ projectId }: { projectId: string }) {
-  return (
-    <a
-      href={`/project/${projectId}/add`}
-      style={{
-        fontSize: "var(--font-size-sm)",
-        fontWeight: 500,
-        color: "var(--color-text-link)",
-        textDecoration: "none",
-        padding: "var(--space-1) var(--space-3)",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid var(--color-bg-border)",
-      }}
-    >
-      + Add node
-    </a>
-  );
-}

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build && drizzle-kit push",
+    "build": "next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
     "db:push": "drizzle-kit push",
@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@xyflow/react": "^12.10.2",
-    "better-sqlite3": "^12.9.0",
     "dagre": "^0.8.5",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.3",
+    "postgres": "^3.4.9",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "uuid": "^13.0.0",
@@ -25,13 +25,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
       "sharp"
     ]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/dagre": "^0.7.54",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",

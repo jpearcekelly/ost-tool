@@ -311,11 +311,11 @@ function TypeFields({ nodeType }: { nodeType: NodeType }) {
  * Valid child types per parent type, following the CDH tree hierarchy.
  */
 const ALLOWED_CHILDREN: Record<NodeType, NodeType[]> = {
-  metric: ["opportunity"],
+  metric: ["metric", "opportunity"],
   opportunity: ["opportunity", "solution"],
-  solution: ["assumption"],
-  assumption: ["experiment"],
-  experiment: [],
+  solution: ["solution", "assumption"],
+  assumption: ["assumption", "experiment"],
+  experiment: ["experiment"],
 };
 
 function AddChildForm({ parentId, parentType }: { parentId: string; parentType: NodeType }) {

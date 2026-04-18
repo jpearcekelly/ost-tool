@@ -78,9 +78,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const result = await db.delete(nodes).where(eq(nodes.id, id));
+  const result = await db
+    .delete(nodes)
+    .where(eq(nodes.id, id))
+    .returning({ id: nodes.id });
 
-  if (result.changes === 0) {
+  if (result.length === 0) {
     return NextResponse.json({ error: "Node not found" }, { status: 404 });
   }
 

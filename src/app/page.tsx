@@ -2,6 +2,8 @@ import Link from "next/link";
 import { db } from "@/db";
 import { CreateProjectForm } from "@/components/create-project-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const projects = await db.query.projects.findMany({
     orderBy: (p, { desc }) => [desc(p.updatedAt)],

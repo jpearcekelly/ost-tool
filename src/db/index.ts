@@ -1,15 +1,17 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
-import path from "path";
 
-const DB_PATH = path.join(process.cwd(), "ost.db");
+const connectionString = process.env.DATABASE_URL;
 
-const sqlite = new Database(DB_PATH);
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL environment variable is required. " +
+      "Set it to your Postgres connection string, e.g.: " +
+      "postgresql://user:password@host:5432/dbname"
+  );
+}
 
-// Enable WAL mode for better concurrent read performance
-sqlite.pragma("journal_mode = WAL");
-// Enable foreign keys (off by default in SQLite)
-sqlite.pragma("foreign_keys = ON");
+const client = postgres(connectionString);
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(client, { schema });
