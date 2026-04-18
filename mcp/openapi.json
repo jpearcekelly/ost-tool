@@ -1,0 +1,389 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OST Tool API",
+    "description": "AI-powered Opportunity-Solution Tree for product discovery. Implements the Continuous Discovery Habits (CDH) framework by Teresa Torres. The tree hierarchy flows: Metric → Opportunity → Solution → Assumption → Experiment. Same-type nesting is allowed (e.g., Metric → Metric for drill-downs).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://ost-tool-production.up.railway.app"
+    }
+  ],
+  "paths": {
+    "/api/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "summary": "List all projects",
+        "responses": {
+          "200": {
+            "description": "Array of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Project" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createProject",
+        "summary": "Create a new project to hold an Opportunity-Solution Tree",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "description": "Project name" },
+                  "description": { "type": "string", "description": "Project description" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created project",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Project" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}": {
+      "get": {
+        "operationId": "getProject",
+        "summary": "Get a project with all its nodes and their details",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project with nodes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Project" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/nodes": {
+      "get": {
+        "operationId": "listNodes",
+        "summary": "List nodes in a project with optional filtering. Use format=tree for nested hierarchy. Use type to filter by node type. Use parentId to get children of a specific node (parentId=null for root nodes).",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["metric", "opportunity", "solution", "assumption", "experiment"]
+            },
+            "description": "Filter by node type"
+          },
+          {
+            "name": "parentId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Filter by parent node ID. Use 'null' for root nodes."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["tree"] },
+            "description": "Set to 'tree' to return nested hierarchy instead of flat list"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of nodes (flat or nested depending on format parameter)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Node" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createNode",
+        "summary": "Create a new node in the tree. CDH hierarchy: Metric → Opportunity → Solution → Assumption → Experiment. Same-type nesting allowed. Only Metrics should be root nodes (no parentId). All other types should have a parentId to place them in the tree.",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["type", "title"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["metric", "opportunity", "solution", "assumption", "experiment"],
+                    "description": "Node type"
+                  },
+                  "title": { "type": "string", "description": "Node title" },
+                  "description": { "type": "string", "description": "Node description or context" },
+                  "parentId": {
+                    "type": "string",
+                    "description": "Parent node ID. Required for non-metric types. Omit for root metrics."
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Node status. Defaults: metric=active, opportunity=identified, solution=proposed, assumption=untested, experiment=planned"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created node with type-specific details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Node" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/nodes/{nodeId}": {
+      "get": {
+        "operationId": "getNode",
+        "summary": "Get full details of a single node including type-specific fields (metric values, RICE scores, assumption category, experiment details, etc)",
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Node with all details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Node" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateNode",
+        "summary": "Update a node's fields. Can update title, description, status, sortOrder, or parentId (for reparenting).",
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": {
+                    "type": "string",
+                    "description": "Valid statuses by type — metric: active/deprecated, opportunity: identified/exploring/pursuing/parked, solution: proposed/exploring/building/shipped/abandoned, assumption: untested/testing/validated/invalidated, experiment: planned/running/completed/abandoned"
+                  },
+                  "parentId": { "type": "string", "description": "New parent node ID for reparenting" },
+                  "sortOrder": { "type": "integer", "description": "Sort order among siblings" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated node",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Node" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteNode",
+        "summary": "Delete a node and all its descendants. This is irreversible.",
+        "parameters": [
+          {
+            "name": "nodeId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        }
+      },
+      "Node": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "projectId": { "type": "string" },
+          "parentId": { "type": "string", "nullable": true },
+          "type": { "type": "string", "enum": ["metric", "opportunity", "solution", "assumption", "experiment"] },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "status": { "type": "string" },
+          "sortOrder": { "type": "integer" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "metricDetail": { "$ref": "#/components/schemas/MetricDetail" },
+          "opportunityDetail": { "$ref": "#/components/schemas/OpportunityDetail" },
+          "solutionDetail": { "$ref": "#/components/schemas/SolutionDetail" },
+          "assumptionDetail": { "$ref": "#/components/schemas/AssumptionDetail" },
+          "experimentDetail": { "$ref": "#/components/schemas/ExperimentDetail" },
+          "children": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Node" },
+            "description": "Only present when format=tree is used"
+          }
+        }
+      },
+      "MetricDetail": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "metricType": { "type": "string", "enum": ["business", "product", "traction"] },
+          "currentValue": { "type": "number", "nullable": true },
+          "targetValue": { "type": "number", "nullable": true },
+          "unit": { "type": "string", "nullable": true },
+          "sourceType": { "type": "string", "enum": ["manual", "snowflake", "api"] },
+          "refreshFrequency": { "type": "string", "enum": ["manual", "daily", "weekly"] },
+          "journeyStage": { "type": "string", "nullable": true, "enum": ["go_to_market", "onboarding", "conversion", "activation", "retention", "referral"] }
+        }
+      },
+      "OpportunityDetail": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "source": { "type": "string", "nullable": true, "enum": ["interview", "survey", "analytics", "feedback", "assumption"] },
+          "reach": { "type": "integer", "nullable": true },
+          "impact": { "type": "integer", "nullable": true, "description": "1-5 scale" },
+          "confidence": { "type": "integer", "nullable": true, "description": "10-100 percentage" },
+          "effort": { "type": "number", "nullable": true, "description": "Person-weeks" },
+          "riceScore": { "type": "number", "nullable": true }
+        }
+      },
+      "SolutionDetail": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "reach": { "type": "integer", "nullable": true },
+          "impact": { "type": "integer", "nullable": true },
+          "confidence": { "type": "integer", "nullable": true },
+          "effort": { "type": "number", "nullable": true },
+          "riceScore": { "type": "number", "nullable": true }
+        }
+      },
+      "AssumptionDetail": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "category": { "type": "string", "nullable": true, "enum": ["desirability", "usability", "feasibility", "viability"] },
+          "isLeapOfFaith": { "type": "boolean" },
+          "evidenceStrength": { "type": "string", "enum": ["none", "weak", "moderate", "strong"] }
+        }
+      },
+      "ExperimentDetail": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "experimentType": { "type": "string", "nullable": true, "enum": ["prototype_test", "concierge", "wizard_of_oz", "survey", "data_analysis", "one_question", "other"] },
+          "hypothesis": { "type": "string", "nullable": true },
+          "method": { "type": "string", "nullable": true },
+          "successCriteria": { "type": "string", "nullable": true },
+          "result": { "type": "string", "nullable": true },
+          "outcome": { "type": "string", "enum": ["pending", "validated", "invalidated", "inconclusive"] },
+          "startedAt": { "type": "string", "nullable": true },
+          "completedAt": { "type": "string", "nullable": true }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key for programmatic access"
+      }
+    }
+  },
+  "security": [
+    { "bearerAuth": [] }
+  ]
+}
