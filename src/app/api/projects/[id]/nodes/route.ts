@@ -21,6 +21,66 @@ import {
 } from "@/lib/validators";
 import { v4 as uuid } from "uuid";
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: projectId } = await params;
+  const url = new URL(request.url);
+  const typeFilter = url.searchParams.get("type");
+  const parentId = url.searchParams.get("parentId");
+  const format = url.searchParams.get("format"); // "tree" for nested structure
+
+  const allNodes = await db.query.nodes.findMany({
+    where: (n, { eq, and, isNull }) => {
+      const conditions = [eq(n.projectId, projectId)];
+      if (typeFilter) conditions.push(eq(n.type, typeFilter));
+      if (parentId === "null") conditions.push(isNull(n.parentId));
+      else if (parentId) conditions.push(eq(n.parentId, parentId));
+      return and(...conditions);
+    },
+    with: {
+      metricDetail: true,
+      opportunityDetail: true,
+      solutionDetail: true,
+      assumptionDetail: true,
+      experimentDetail: true,
+      treeLayout: true,
+    },
+    orderBy: (n, { asc }) => [asc(n.sortOrder)],
+  });
+
+  if (format === "tree") {
+    // Return the full project tree as a nested structure
+    const allProjectNodes = await db.query.nodes.findMany({
+      where: (n, { eq }) => eq(n.projectId, projectId),
+      with: {
+        metricDetail: true,
+        opportunityDetail: true,
+        solutionDetail: true,
+        assumptionDetail: true,
+        experimentDetail: true,
+      },
+      orderBy: (n, { asc }) => [asc(n.sortOrder)],
+    });
+
+    const nodeMap = new Map(allProjectNodes.map((n) => [n.id, { ...n, children: [] as typeof allProjectNodes }]));
+    const roots: (typeof allProjectNodes[number] & { children: typeof allProjectNodes })[] = [];
+
+    for (const node of nodeMap.values()) {
+      if (node.parentId && nodeMap.has(node.parentId)) {
+        nodeMap.get(node.parentId)!.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return NextResponse.json(roots);
+  }
+
+  return NextResponse.json(allNodes);
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

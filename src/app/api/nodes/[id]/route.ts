@@ -5,6 +5,31 @@ import { eq } from "drizzle-orm";
 import { updateNodeSchema, statusSchemaForType } from "@/lib/validators";
 import type { NodeType } from "@/db/schema";
 
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const node = await db.query.nodes.findFirst({
+    where: (n, { eq }) => eq(n.id, id),
+    with: {
+      metricDetail: true,
+      opportunityDetail: true,
+      solutionDetail: true,
+      assumptionDetail: true,
+      experimentDetail: true,
+      treeLayout: true,
+    },
+  });
+
+  if (!node) {
+    return NextResponse.json({ error: "Node not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(node);
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

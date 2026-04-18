@@ -1,0 +1,14 @@
+{
+  "name": "ost-tool-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for OST Tool — AI-powered product discovery",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.3.6"
+  }
+}

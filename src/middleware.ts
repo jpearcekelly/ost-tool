@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SITE_PASSWORD = process.env.SITE_PASSWORD;
+const API_KEY = process.env.API_KEY;
 const COOKIE_NAME = "ost-auth";
 
 export function middleware(request: NextRequest) {
@@ -9,7 +10,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Already authenticated
+  // API key authentication for programmatic access (MCP server, scripts)
+  if (API_KEY && request.headers.get("authorization") === `Bearer ${API_KEY}`) {
+    return NextResponse.next();
+  }
+
+  // Already authenticated via cookie
   if (request.cookies.get(COOKIE_NAME)?.value === SITE_PASSWORD) {
     return NextResponse.next();
   }
